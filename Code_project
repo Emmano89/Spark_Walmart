@@ -1,0 +1,76 @@
+pip install ipython
+PYSPARK_PYTHON=ipython ./bin/pyspark
+
+import findspark
+findspark.init("C:/spark")
+import random
+from time import time
+import numpy as np
+import pandas as pd
+from operator import add
+1) Instancier le client spark¶
+from pyspark import SparkContext
+from pyspark.sql import SparkSession, SparkConf
+import pyspark.sql.functions as F
+from pyspark.sql.functions import *
+
+spark=SparkSession.builder\
+                .master("local[*]")\
+                .appName("walmart_stock")\
+                .getOrCreate()
+2) Importation du fichier walmart Stock¶
+df=spark.read\
+    .option("header", True)\
+    .csv("walmart_stock.csv")
+df.show()
+3) Les noms des colonnes
+df.columns
+
+4) le schéma des données
+df.printSchema()
+5) Création d'un nouveau dataframe
+df2=df.withColumn("HV_ratio",col("High")/col("Volume"))
+df2.show(5)
+6) Le jour correspondant au prix le plus élevé¶
+df2.orderBy(col("High")\
+      .desc())\
+      .select(col("Date"))\
+      .head(1)
+ Transformation de DF en table
+df.createOrReplaceTempView("stock")
+7) Moyenne de la colonne Close
+df2.select("Close").summary("mean").show()
+spark.sql(""" SELECT AVG(Close) as AVG_Close FROM stock """).show()
+8) Le maximum et le minimum de la colonne Volume¶
+df2.select("Volume").summary("min","max").show()
+##Méthode Sql
+spark.sql("""SELECT Min(Volume) as Min_Volume, Max(Volume) as Max_Volume FROM stock """)\
+    .show()
+9) Nombre de jours où Close est < 60 jours
+
+df2.filter(df2.Close<=60).count()
+#methode SQL
+spark.sql("""select Count(*) from stock where ( Close <= 60) """).show()
+10) Pourcentage du temps où High était supérieur à 80 dollars
+df2.filter(df2.High>80).count()/df2.count())*100
+spark.sql("""select Count(*)/(select Count(*)from stock)*100 as Percent From stock where (High > 80)""").show()
+
+
+11) Maximum High per year
+
+df2.groupBy(F.year("Date").alias("Année")).agg(F.max("High").alias("Max_High")).sort(F.year("Date"))\
+  # .show()
+methode SQL
+spark.sql("""SELECT Year(Date) as Année, max(High) as Max_High FROM stock\
+          GroupBy(Annee) orderby(Annee) """).show()
+12) La moyenne de Close pour chaque mois
+f3=df.groupBy(F.last_day('date').alias("K_Annee"))\
+      .agg({'Close': 'mean'})\
+      .sort(F.last_day('date'))\
+
+df3.select(F.date_format(K_annee,"yyyy-MM").alias("Annee"),col("avg(Close)").alias("AvG_Close"))\
+   .show()
+methode SQL#methode SQL
+spark.sql("""SELECT SUBSTR(Date,1,7) as Annee, avg(Close) as Avg_Close 
+FROM Stock \
+Group By Annee Order by Annee""").show()
