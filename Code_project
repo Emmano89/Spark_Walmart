@@ -23,7 +23,7 @@ spark=SparkSession.builder\
 2) Importation du fichier walmart Stock¶
 df=spark.read\
     .option("header", True)\
-    .csv("walmart_stock.csv")
+    .csv("Input/walmart_stock.csv")
 df.show()
 3) Les noms des colonnes
 df.columns
