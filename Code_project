@@ -1,5 +1,7 @@
-pip install ipython
-PYSPARK_PYTHON=ipython ./bin/pyspark
+#============================================
+#                  Projet Walmart
+#                Analyste des données 
+#============================================
 
 import findspark
 findspark.init("C:/spark")
